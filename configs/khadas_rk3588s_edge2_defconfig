@@ -1,0 +1,34 @@
+#include "base/base.config"
+#include "chips/rk3588_aarch64.config"
+#include "font/chinese.config"
+#include "fs/exfat.config"
+#include "fs/ntfs.config"
+#include "fs/vfat.config"
+#include "gpu/gpu.config"
+#include "multimedia/audio.config"
+#include "multimedia/camera.config"
+#include "multimedia/gst/audio.config"
+#include "multimedia/gst/camera.config"
+#include "multimedia/gst/rtsp.config"
+#include "multimedia/gst/video.config"
+#include "multimedia/mpp.config"
+#include "wifibt/bt.config"
+#include "wifibt/wireless.config"
+#include "tools/benchmark.config"
+#include "tools/common.config"
+#include "tools/test.config"
+#include "network/chromium.config"
+#include "npu2.config"
+#include "powermanager.config"
+#include "weston.config"
+BR2_PACKAGE_FFMPEG=y
+BR2_PACKAGE_FFMPEG_FFPLAY=y
+BR2_PACKAGE_FFMPEG_FFPROBE=y
+BR2_PACKAGE_GD=y
+BR2_PACKAGE_GEOIP=y
+BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_5_10=y
+BR2_PACKAGE_PCRE=y
+BR2_PACKAGE_VIM=y
+BR2_TARGET_GENERIC_ISSUE="Welcome to Edge2 Buildroot"
+BR2_TARGET_GENERIC_ROOT_PASSWD="khadas"
+# BR2_TARGET_ROOTFS_SQUASHFS is reset to default
