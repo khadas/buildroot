@@ -34,6 +34,7 @@ GCC_TARGET_CONF_OPTS += \
 # Finally, we add some of our own flags
 GCC_TARGET_CONF_OPTS += \
 	--enable-languages=c \
+	--enable-languages=c++ \
 	--disable-boostrap \
 	--disable-libgomp \
 	--disable-nls \
@@ -67,12 +68,12 @@ GCC_TARGET_POST_INSTALL_TARGET_HOOKS += GCC_TARGET_INSTALL_LIBS
 
 # Remove unnecessary files (extra links to gcc binaries, and libgcc which is
 # already in `/lib`)
-define GCC_TARGET_RM_FILES
-	rm -f $(TARGET_DIR)/usr/bin/$(ARCH)-buildroot-linux-gnu-gcc*
-	rm -f $(TARGET_DIR)/usr/lib/libgcc_s*.so*
-	rm -f $(TARGET_DIR)/usr/$(ARCH)-buildroot-linux-gnu/lib/ldscripts/elf32*
-	rm -f $(TARGET_DIR)/usr/$(ARCH)-buildroot-linux-gnu/lib/ldscripts/elf64b*
-endef
+#define GCC_TARGET_RM_FILES
+#	rm -f $(TARGET_DIR)/usr/bin/$(ARCH)-buildroot-linux-gnu-gcc*
+#	rm -f $(TARGET_DIR)/usr/lib/libgcc_s*.so*
+#	rm -f $(TARGET_DIR)/usr/$(ARCH)-buildroot-linux-gnu/lib/ldscripts/elf32*
+#	rm -f $(TARGET_DIR)/usr/$(ARCH)-buildroot-linux-gnu/lib/ldscripts/elf64b*
+#endef
 GCC_TARGET_POST_INSTALL_TARGET_HOOKS += GCC_TARGET_RM_FILES
 
 $(eval $(autotools-package))

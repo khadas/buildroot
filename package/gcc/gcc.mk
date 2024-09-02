@@ -75,7 +75,7 @@ HOST_GCC_COMMON_CONF_OPTS = \
 	--enable-__cxa_atexit \
 	--with-gnu-ld \
 	--disable-libssp \
-	--disable-multilib \
+	--enable-multilib \
 	--disable-decimal-float \
 	--enable-plugins \
 	--enable-lto \
