@@ -41,33 +41,6 @@ parse_wake_time()
 short_press()
 {
 	log "Power key short press..."
-
-	if which systemctl >/dev/null; then
-		SUSPEND_CMD="systemctl suspend"
-	elif which pm-suspend >/dev/null; then
-		SUSPEND_CMD="pm-suspend"
-	else
-		SUSPEND_CMD="echo -n mem > /sys/power/state"
-	fi
-
-	# Debounce
-	if [ -f $LOCKFILE ]; then
-		log "Too close to the latest request..."
-		return 0
-	fi
-
-	if parse_wake_time; then
-		if [ "$WAKE_TIME" -le $DEBOUNCE ]; then
-			log "We are just resumed!"
-			return 0
-		fi
-	fi
-
-	log "Prepare to suspend..."
-
-	touch $LOCKFILE
-	sh -c "$SUSPEND_CMD"
-	{ sleep $DEBOUNCE && rm $LOCKFILE; }&
 }
 
 long_press()
