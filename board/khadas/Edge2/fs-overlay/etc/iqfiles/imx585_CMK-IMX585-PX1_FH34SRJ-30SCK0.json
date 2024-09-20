@@ -1681,12 +1681,12 @@
 						},
 						"aldch":	{
 							"param":	{
-								"ldch_en":	0,
-								"meshfile":	"LDCH_mesh_2688_1520_os04a10_4IR",
+								"ldch_en":	1,
+								"meshfile":	"LDCH_mesh_output",
 								"correct_level":	255,
-								"correct_level_max":	255,
-								"light_center":	[1351.12, 739.486],
-								"coefficient":	[-1830.26, 0.000423795, -2.50767e-007, 1.27247e-010]
+								"correct_level_max":	204,
+								"light_center":	[1990.17680889431, 1140.37391560139],
+								"coefficient":	[-2553.03851067412, 0.000476615895998321, -2.7547169938316e-007, 8.88185159e-011]
 							}
 						},
 						"cpsl":	{
