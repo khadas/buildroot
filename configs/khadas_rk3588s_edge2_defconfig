@@ -24,5 +24,7 @@
 #include "powermanager.config"
 #include "weston.config"
 BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_1=y
+BR2_PACKAGE_UTIL_LINUX_RFKILL=y
+BR2_PACKAGE_VIM=y
 BR2_TARGET_GENERIC_ISSUE="Welcome to Edge2 Buildroot"
 BR2_TARGET_GENERIC_ROOT_PASSWD="khadas"
