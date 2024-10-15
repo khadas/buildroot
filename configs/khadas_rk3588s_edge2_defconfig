@@ -26,5 +26,6 @@
 BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_1=y
 BR2_PACKAGE_UTIL_LINUX_RFKILL=y
 BR2_PACKAGE_VIM=y
+BR2_ROOTFS_OVERLAY="board/rockchip/common/base board/rockchip/rk3588/fs-overlay/ board/khadas/Edge2/fs-overlay"
 BR2_TARGET_GENERIC_ISSUE="Welcome to Edge2 Buildroot"
 BR2_TARGET_GENERIC_ROOT_PASSWD="khadas"
