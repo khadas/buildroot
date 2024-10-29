@@ -468,8 +468,8 @@
 								},
 								"lscBypassEnable":	0,
 								"uvDetectionEnable":	1,
-								"xyDetectionEnable":	1,
-								"yuvDetectionEnable":	0,
+								"xyDetectionEnable":	0,
+								"yuvDetectionEnable":	1,
 								"lsUsedForYuvDet":	["D75", "D50", "D65", "HZ", "A", "CWF", "TL84"],
 								"lsUsedForYuvDet_len":	7,
 								"blkStatisticsEnable":	1,
@@ -1681,7 +1681,7 @@
 						},
 						"aldch":	{
 							"param":	{
-								"ldch_en":	1,
+								"ldch_en":	0,
 								"meshfile":	"LDCH_mesh_output",
 								"correct_level":	255,
 								"correct_level_max":	204,
