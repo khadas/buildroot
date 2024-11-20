@@ -937,7 +937,7 @@ state.rockchipes8316c {
 	control.44 {
 		iface MIXER
 		name 'Left Headphone Mixer Left DAC Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -957,7 +957,7 @@ state.rockchipes8316c {
 	control.46 {
 		iface MIXER
 		name 'Right Headphone Mixer Right DAC Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
