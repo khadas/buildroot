@@ -1,4 +1,4 @@
-From 4fb277884f6125516fd907f05e9343b91626cef3 Mon Sep 17 00:00:00 2001
+From 544691f41daffdddc233027f5246b518d960009f Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Mon, 27 Nov 2023 09:32:23 +0800
 Subject: [PATCH 7/8] adb: daemon: Handle SIGINT
@@ -11,10 +11,10 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/adb/daemon/main.cpp b/adb/daemon/main.cpp
-index 5203d6b..b322ad1 100644
+index b08f2f4..7b1484f 100644
 --- a/adb/daemon/main.cpp
 +++ b/adb/daemon/main.cpp
-@@ -157,6 +157,7 @@ static void setup_port(int port) {
+@@ -166,6 +166,7 @@ static void setup_port(int port) {
  int adbd_main(int server_port) {
      umask(0);
  

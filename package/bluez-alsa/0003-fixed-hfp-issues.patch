@@ -1,0 +1,92 @@
+From 2b38d8a2af78e26a6aee112767371a6835cf5b33 Mon Sep 17 00:00:00 2001
+From: Yao Xiao <xiaoyao@rock-chips.com>
+Date: Wed, 24 Jul 2024 20:58:21 +0800
+Subject: [PATCH 1/1] fixed hfp issues
+
+---
+ src/ba-rfcomm.c    | 5 +++++
+ src/ba-transport.c | 6 ++++++
+ src/sco.c          | 6 ++++++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/src/ba-rfcomm.c b/src/ba-rfcomm.c
+index 483156c..428263b 100644
+--- a/src/ba-rfcomm.c
++++ b/src/ba-rfcomm.c
+@@ -1020,9 +1020,11 @@ static int rfcomm_hfp_setup_codec_connection(struct ba_rfcomm *r) {
+ 	/* Only AG can initialize codec connection. So, for HF we need to request
+ 	 * codec selection from AG by sending AT+BCC command. */
+ 	if (t_sco->profile & BA_TRANSPORT_PROFILE_HFP_HF) {
++		/*
+ 		if ((rv = rfcomm_write_at(fd, AT_TYPE_CMD, "+BCC", NULL)) == -1)
+ 			return -1;
+ 		r->handler = &rfcomm_handler_resp_ok;
++		*/
+ 		return 0;
+ 	}
+ 
+@@ -1170,6 +1172,8 @@ static void rfcomm_thread_cleanup(struct ba_rfcomm *r) {
+ 
+ }
+ 
++/* external RFCOMM handler */
++volatile int g_sco_handler_fd = -1;
+ static void *rfcomm_thread(struct ba_rfcomm *r) {
+ 
+ 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+@@ -1407,6 +1411,7 @@ process:
+ 
+ 		r->idle = false;
+ 		pfds[2].fd = r->handler_fd;
++		g_sco_handler_fd = r->handler_fd;
+ 
+ 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+ 		int poll_rv = poll(pfds, ARRAYSIZE(pfds), timeout);
+diff --git a/src/ba-transport.c b/src/ba-transport.c
+index b983291..d086948 100644
+--- a/src/ba-transport.c
++++ b/src/ba-transport.c
+@@ -898,10 +898,16 @@ fail:
+ 	return -1;
+ }
+ 
++extern volatile int g_sco_handler_fd;
+ static int transport_release_bt_sco(struct ba_transport *t) {
+ 
+ 	debug("Releasing SCO link: %d", t->bt_fd);
+ 
++	//notify incoming sco link
++	if (write(g_sco_handler_fd, "Releasing SCO link",
++		  strlen("Releasing SCO link")) == -1)
++		error("Couldn't forward sco: %s", strerror(errno));
++
+ 	shutdown(t->bt_fd, SHUT_RDWR);
+ 	close(t->bt_fd);
+ 	t->bt_fd = -1;
+diff --git a/src/sco.c b/src/sco.c
+index bf34c4d..6e4da7b 100644
+--- a/src/sco.c
++++ b/src/sco.c
+@@ -56,6 +56,7 @@ static void sco_dispatcher_cleanup(struct sco_data *data) {
+ 		close(data->pfd.fd);
+ }
+ 
++extern volatile int g_sco_handler_fd;
+ static void *sco_dispatcher_thread(struct ba_adapter *a) {
+ 
+ 	struct sco_data data = { .a = a, .pfd = { -1, POLLIN, 0 } };
+@@ -116,6 +117,11 @@ static void *sco_dispatcher_thread(struct ba_adapter *a) {
+ 		ba2str(&addr.sco_bdaddr, addrstr);
+ 		debug("New incoming SCO link: %s: %d", addrstr, fd);
+ 
++		//notify incoming sco link
++		if (write(g_sco_handler_fd, "New incoming SCO link",
++			  strlen("New incoming SCO link")) == -1)
++			error("Couldn't forward sco: %s", strerror(errno));
++
+ 		if ((d = ba_device_lookup(data.a, &addr.sco_bdaddr)) == NULL) {
+ 			error("Couldn't lookup device: %s", addrstr);
+ 			goto cleanup;
+-- 
+2.34.1
+

@@ -1,0 +1,122 @@
+From d001e8b602d5097f9da329c08d23da60cf5fb7cb Mon Sep 17 00:00:00 2001
+From: Yao Xiao <xiaoyao@rock-chips.com>
+Date: Thu, 22 Aug 2024 14:58:52 +0800
+Subject: [PATCH 1/1] bluez: rk: Fixed some error
+
+---
+ src/device.c        | 24 ++++++++++++++++++++++++
+ src/gatt-client.c   |  2 +-
+ src/gatt-database.c | 12 +++++++++++-
+ src/shared/att.c    |  2 +-
+ 4 files changed, 37 insertions(+), 3 deletions(-)
+
+diff --git a/src/device.c b/src/device.c
+index 7f63c33..5efcee4 100644
+--- a/src/device.c
++++ b/src/device.c
+@@ -1138,6 +1138,17 @@ static gboolean dev_property_get_rssi(const GDBusPropertyTable *property,
+ 	return TRUE;
+ }
+ 
++static gboolean dev_property_get_mtu(const GDBusPropertyTable *property,
++					DBusMessageIter *iter, void *data)
++{
++	struct btd_device *dev = data;
++	dbus_int16_t val = dev->att_mtu;
++
++	dbus_message_iter_append_basic(iter, DBUS_TYPE_INT16, &val);
++
++	return TRUE;
++}
++
+ static gboolean dev_property_exists_rssi(const GDBusPropertyTable *property,
+ 								void *data)
+ {
+@@ -3248,6 +3259,7 @@ static const GDBusPropertyTable device_properties[] = {
+ 	{ "Trusted", "b", dev_property_get_trusted, dev_property_set_trusted },
+ 	{ "Blocked", "b", dev_property_get_blocked, dev_property_set_blocked },
+ 	{ "LegacyPairing", "b", dev_property_get_legacy },
++	{ "MTU", "n", dev_property_get_mtu, NULL, NULL },
+ 	{ "RSSI", "n", dev_property_get_rssi, NULL, dev_property_exists_rssi },
+ 	{ "Connected", "b", dev_property_get_connected },
+ 	{ "UUIDs", "as", dev_property_get_uuids },
+@@ -5651,6 +5663,16 @@ static bool remote_counter(uint32_t *sign_cnt, void *user_data)
+ 	return true;
+ }
+ 
++static void att_exchange(uint16_t mtu, void *user_data)
++{
++	struct btd_device *dev = user_data;
++
++	dev->att_mtu = mtu;
++	error("chrc->path %s, mtu: %d", dev->path, mtu);
++	g_dbus_emit_property_changed(dbus_conn, dev->path,
++				     DEVICE_INTERFACE, "MTU");
++}
++
+ bool device_attach_att(struct btd_device *dev, GIOChannel *io)
+ {
+ 	GError *gerr = NULL;
+@@ -5728,6 +5750,8 @@ bool device_attach_att(struct btd_device *dev, GIOChannel *io)
+ 
+ 	bt_att_ref(dev->att);
+ 
++	bt_att_register_exchange(dev->att, att_exchange, dev, NULL);
++
+ 	bt_att_set_debug(dev->att, BT_ATT_DEBUG, gatt_debug, NULL, NULL);
+ 
+ 	dev->att_disconn_id = bt_att_register_disconnect(dev->att,
+diff --git a/src/gatt-client.c b/src/gatt-client.c
+index 425ec66..b7500f1 100644
+--- a/src/gatt-client.c
++++ b/src/gatt-client.c
+@@ -2375,7 +2375,7 @@ void btd_gatt_client_connected(struct btd_gatt_client *client)
+ 	 * Services have already been created before. Re-enable notifications
+ 	 * for any pre-registered notification sessions.
+ 	 */
+-	queue_foreach(client->all_notify_clients, register_notify, client);
++	//queue_foreach(client->all_notify_clients, register_notify, client);
+ }
+ 
+ void btd_gatt_client_service_added(struct btd_gatt_client *client,
+diff --git a/src/gatt-database.c b/src/gatt-database.c
+index 89bbd42..c263b39 100644
+--- a/src/gatt-database.c
++++ b/src/gatt-database.c
+@@ -2991,9 +2991,19 @@ static void property_changed_cb(GDBusProxy *proxy, const char *name,
+ 	uint8_t *value = NULL;
+ 	int len = 0;
+ 
+-	if (strcmp(name, "Value"))
++	if (strcmp(name, "Value") || strcmp(name, "ServiceChanged"))
+ 		return;
+ 
++	if (!strcmp(name, "ServiceChanged")) {
++		uint8_t val[4];
++		put_le16(0x0001, val);
++		put_le16(0xffff, val + 2);
++		if (!gatt_db_attribute_notify(chrc->service->app->database->svc_chngd,
++					      val, sizeof(val), NULL))
++			error("Failed to notify Service Changed");
++		return;
++	}
++
+ 	if (iter) {
+ 		if (dbus_message_iter_get_arg_type(iter) != DBUS_TYPE_ARRAY) {
+ 			DBG("Malformed \"Value\" property received");
+diff --git a/src/shared/att.c b/src/shared/att.c
+index c660320..730727f 100644
+--- a/src/shared/att.c
++++ b/src/shared/att.c
+@@ -551,7 +551,7 @@ static bool can_write_data(struct io *io, void *user_data)
+ 	if (!op)
+ 		return false;
+ 
+-	if (!bt_att_chan_write(chan, op->opcode, op->pdu, op->len)) {
++	if (bt_att_chan_write(chan, op->opcode, op->pdu, op->len) < 0) {
+ 		if (op->callback)
+ 			op->callback(BT_ATT_OP_ERROR_RSP, NULL, 0,
+ 							op->user_data);
+-- 
+2.34.1
+

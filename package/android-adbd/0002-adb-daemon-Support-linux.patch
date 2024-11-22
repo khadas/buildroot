@@ -1,4 +1,4 @@
-From 7c241a84a316a0934686ba844a943720f402b806 Mon Sep 17 00:00:00 2001
+From b7390990c4430c0d55aa7d2538918ba3b9407426 Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Thu, 28 Sep 2023 15:10:54 +0800
 Subject: [PATCH 2/8] adb: daemon: Support linux
@@ -11,7 +11,7 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
  adb/adb.cpp                            |  2 +
  adb/adb_trace.cpp                      | 10 +++
- adb/daemon/main.cpp                    | 18 ++++++
+ adb/daemon/main.cpp                    | 25 +++++++
  adb/file_sync_service.cpp              | 25 +++++++
  adb/jdwp_service.cpp                   |  1 +
  adb/remount_service.cpp                | 10 +++
@@ -22,7 +22,7 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
  base/include/android-base/properties.h |  2 +
  base/properties.cpp                    | 61 +++++++++++++++++
  meson.build                            | 90 ++++++++++++++++++++++++++
- 13 files changed, 273 insertions(+), 2 deletions(-)
+ 13 files changed, 280 insertions(+), 2 deletions(-)
  create mode 100644 meson.build
 
 diff --git a/adb/adb.cpp b/adb/adb.cpp
@@ -67,7 +67,7 @@ index eac923d..4261134 100644
                 const char* tag, const char* file, unsigned int line,
                 const char* message) {
 diff --git a/adb/daemon/main.cpp b/adb/daemon/main.cpp
-index 3c27582..5203d6b 100644
+index 3c27582..b08f2f4 100644
 --- a/adb/daemon/main.cpp
 +++ b/adb/daemon/main.cpp
 @@ -31,6 +31,8 @@
@@ -95,11 +95,30 @@ index 3c27582..5203d6b 100644
  #include "mdns.h"
  
  static const char* root_seclabel = nullptr;
-@@ -141,10 +145,13 @@ static void drop_privileges(int server_port) {
-         }
-     }
+@@ -93,8 +97,10 @@ static bool should_drop_privileges() {
+     return true; // "adb root" not allowed, always drop privileges.
+ #endif // ALLOW_ADBD_ROOT
  }
 +#endif
+ 
+ static void drop_privileges(int server_port) {
++#ifdef __ANDROID__
+     ScopedMinijail jail(minijail_new());
+ 
+     // Add extra groups:
+@@ -140,11 +146,21 @@ static void drop_privileges(int server_port) {
+             LOG(FATAL) << "Could not install *smartsocket* listener: " << error;
+         }
+     }
++#else
++    std::string error;
++    std::string local_name =
++        android::base::StringPrintf("tcp:%d", server_port);
++    if (install_listener(local_name, "*smartsocket*", nullptr, 0, nullptr, &error)) {
++        LOG(FATAL) << "Could not install *smartsocket* listener: " << error;
++    }
++#endif
+ }
  
  static void setup_port(int port) {
      local_init(port);
@@ -109,17 +128,7 @@ index 3c27582..5203d6b 100644
  }
  
  int adbd_main(int server_port) {
-@@ -174,7 +181,9 @@ int adbd_main(int server_port) {
-           " unchanged.\n");
-     }
- 
-+#ifdef __ANDROID__
-     drop_privileges(server_port);
-+#endif
- 
-     bool is_usb = false;
-     if (access(USB_FFS_ADB_EP0, F_OK) == 0) {
-@@ -201,9 +210,11 @@ int adbd_main(int server_port) {
+@@ -201,9 +217,11 @@ int adbd_main(int server_port) {
          setup_port(DEFAULT_ADB_LOCAL_TRANSPORT_PORT);
      }
  
@@ -131,7 +140,7 @@ index 3c27582..5203d6b 100644
  
      D("Event loop starting");
      fdevent_loop();
-@@ -214,7 +225,9 @@ int adbd_main(int server_port) {
+@@ -214,7 +232,9 @@ int adbd_main(int server_port) {
  int main(int argc, char** argv) {
      while (true) {
          static struct option opts[] = {
@@ -141,7 +150,7 @@ index 3c27582..5203d6b 100644
              {"device_banner", required_argument, nullptr, 'b'},
              {"version", no_argument, nullptr, 'v'},
          };
-@@ -226,9 +239,11 @@ int main(int argc, char** argv) {
+@@ -226,9 +246,11 @@ int main(int argc, char** argv) {
          }
  
          switch (c) {
@@ -153,7 +162,7 @@ index 3c27582..5203d6b 100644
          case 'b':
              adb_device_banner = optarg;
              break;
-@@ -244,7 +259,10 @@ int main(int argc, char** argv) {
+@@ -244,7 +266,10 @@ int main(int argc, char** argv) {
  
      close_stdin();
  

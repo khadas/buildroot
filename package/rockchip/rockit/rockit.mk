@@ -13,14 +13,12 @@ ROCKIT_INSTALL_STAGING = YES
 ifneq ($(BR2_PACKAGE_RK3308),)
 ROCKIT_CONF_OPTS += -DRK3308=TRUE
 ROCKIT_DEPENDENCIES = alsa-lib
-endif
 
-ifneq ($(BR2_PACKAGE_RK3506),)
+else ifneq ($(BR2_PACKAGE_RK3506),)
 ROCKIT_CONF_OPTS += -DRK3506=TRUE
 ROCKIT_DEPENDENCIES = rockchip-rga alsa-lib
-endif
 
-ifeq ($(BR2_PACKAGE_RK3506)$(BR2_PACKAGE_RK3308),)
+else
 ROCKIT_DEPENDENCIES = rockchip-mpp rockchip-rga alsa-lib
 endif
 

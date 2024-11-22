@@ -1,0 +1,53 @@
+From e93c3b453196653f4c0376b58772a439ae97231f Mon Sep 17 00:00:00 2001
+From: Yao Xiao <xiaoyao@rock-chips.com>
+Date: Tue, 6 Aug 2024 16:45:02 +0800
+Subject: [PATCH 1/1] fix '/etc/main|input|network.conf
+
+---
+ profiles/input/manager.c   | 2 +-
+ profiles/network/manager.c | 2 +-
+ src/main.c                 | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/profiles/input/manager.c b/profiles/input/manager.c
+index f4598bc..f118333 100644
+--- a/profiles/input/manager.c
++++ b/profiles/input/manager.c
+@@ -80,7 +80,7 @@ static int input_init(void)
+ 	GKeyFile *config;
+ 	GError *err = NULL;
+ 
+-	config = load_config_file(CONFIGDIR "/input.conf");
++	config = load_config_file("/etc/input.conf");
+ 	if (config) {
+ 		int idle_timeout;
+ 		gboolean uhid_enabled, classic_bonded_only, auto_sec;
+diff --git a/profiles/network/manager.c b/profiles/network/manager.c
+index a2650d6..c93a428 100644
+--- a/profiles/network/manager.c
++++ b/profiles/network/manager.c
+@@ -158,7 +158,7 @@ static int network_init(void)
+ {
+ 	int err;
+ 
+-	read_config(CONFIGDIR "/network.conf");
++	read_config("/etc/network.conf");
+ 
+ 	err = bnep_init();
+ 	if (err) {
+diff --git a/src/main.c b/src/main.c
+index 4279363..7cb5465 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -252,7 +252,7 @@ static GKeyFile *load_config(const char *name)
+ 			else
+ 				len = strlen(configdir);
+ 		} else {
+-			configdir = CONFIGDIR;
++			configdir = "/etc"; //CONFIGDIR;
+ 			len = strlen(configdir);
+ 		}
+ 
+-- 
+2.34.1
+

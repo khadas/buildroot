@@ -1,6 +1,5 @@
 config BR2_PACKAGE_ROCKIT
 	bool "rockit"
-	select BR2_PACKAGE_ROCKCHIP_MPP
 	select BR2_PACKAGE_ALSA_PLUGINS
 	default n
 	help

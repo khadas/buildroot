@@ -1,8 +1,17 @@
 # The env variables below can be overridden
 
+# HACK to disable weston-keyboard process
+# export WESTON_NO_KEYBOARD=1
+
+# HACK to disable background
+# export WESTON_NO_BACKGROUND=1
+
 # HACK for old chromium, see:
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1279574
 export WL_OUTPUT_VERSION=3
+
+# Increasing this can help to reduce tearing for NVC
+export WESTON_VNC_MIN_BUFFERS=4
 
 # Comment out this for atomic related functions, e.g. sprites
 export WESTON_DISABLE_ATOMIC=1
@@ -58,6 +67,9 @@ export WESTON_DRM_KEEP_RATIO=1
 
 # Tag file for freezing weston display
 export WESTON_FREEZE_DISPLAY=/tmp/.freeze_weston
+
+# Wrap pointer around the outputs
+# export WESTON_WRAP_POINTER=1
 
 # Try to pin views to the assigned output
 # export WESTON_OUTPUT_PIN=1

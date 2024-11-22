@@ -82,6 +82,12 @@ config BR2_PACKAGE_RK3308
 	help
 	  Use Rockchip's rk3308 SoC.
 
+
+config BR2_PACKAGE_RK3506
+    bool "rk3506"
+	help
+	  Use Rockchip's rk3506 SoC.
+
 config BR2_PACKAGE_RK3326
 	bool "rk3326"
 	select BR2_PACKAGE_ROCKCHIP_HAS_ISP1
@@ -191,7 +197,9 @@ menu "Rockchip BSP packages"
 	source "package/rockchip/rockchip-rga/Config.in"
 	source "package/rockchip/rockchip-test/Config.in"
 	source "package/rockchip/rockchip-uac-app/Config.in"
+	source "package/rockchip/rockchip-uvc-app/Config.in"
 	source "package/rockchip/rockit/Config.in"
+	source "package/rockchip/rockit-uvc/Config.in"
 	source "package/rockchip/slt_gpu_light/Config.in"
 	source "package/rockchip/tee-user-app/Config.in"
 endmenu

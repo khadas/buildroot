@@ -67,8 +67,14 @@ export GST_V4L2SRC_RK_DEVICES=_mainpath:_selfpath:_bypass:_scale
 # Max resolution for v4l2src
 export GST_V4L2SRC_MAX_RESOLUTION=3840x2160
 
+# Bypass buf cache cleaning
+# export GST_V4L2SRC_NO_CACHE_CLEAN=1
+
 # Min buffers for V4L2 plugins
 # export GST_V4L2_MIN_BUFS=64
+
+# Disable buffer sharing
+# export GST_V4L2_BUF_SHARING=0
 
 # Preferred sinks for playbin3(autoaudiosink/autovideosink) and playbin.
 # export AUTOAUDIOSINK_PREFERRED=alsasink

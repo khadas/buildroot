@@ -1,0 +1,42 @@
+From 55d5071c8cc1bd5cc0d43c55bef11fe26935f909 Mon Sep 17 00:00:00 2001
+From: Yao Xiao <xiaoyao@rock-chips.com>
+Date: Thu, 13 Jun 2024 16:29:18 +0800
+Subject: [PATCH 1/1] Support SCO over PCM/I2S for Broadcom Chips
+
+---
+ src/sco.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/src/sco.c b/src/sco.c
+index db500f9..bf34c4d 100644
+--- a/src/sco.c
++++ b/src/sco.c
+@@ -133,6 +133,25 @@ static void *sco_dispatcher_thread(struct ba_adapter *a) {
+ 			error("Couldn't setup transparent voice: %s", strerror(errno));
+ 			goto cleanup;
+ 		}
++
++
++		if (a->chip.manufacturer == BT_COMPID_BROADCOM) {
++			//Broadcom WBS
++			system("hcitool cmd 0x3f 0x7e 01 02 00");
++
++			//I2SPCM PARAM
++			system("hcitool cmd 0x3f 0x6d 00 01 01 02");
++
++			//Voice Setting
++			system("hcitool cmd 0x03 0x0026 0x63 0x00");
++
++			//Broadcom SCO PCM PARAM: host master, bt slave
++			system("hcitool cmd 0x3f 0x1c 00 02 00 00 00");
++
++			//Broadcom SCO PCM PARAM: bt master, host slave
++			//system("hcitool cmd 0x3f 0x1c 00 02 00 01 01");
++		}
++
+ 		if (read(fd, &voice, 1) == -1) {
+ 			error("Couldn't authorize SCO connection: %s", strerror(errno));
+ 			goto cleanup;
+-- 
+2.34.1
+

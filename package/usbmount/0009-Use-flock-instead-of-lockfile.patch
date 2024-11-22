@@ -1,0 +1,33 @@
+From a7c1c9ef451b0a2061f714ce102b0c0a01a360e1 Mon Sep 17 00:00:00 2001
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+Date: Tue, 27 Aug 2024 16:49:59 +0800
+Subject: [PATCH 9/9] Use flock instead of lockfile
+
+The lockfile is slow for multiple partitions somehow.
+
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
+ usbmount | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/usbmount b/usbmount
+index 870e9d6..8f2ab2a 100755
+--- a/usbmount
++++ b/usbmount
+@@ -82,9 +82,10 @@ if [ "$1" = add ]; then
+ 
+     # Acquire lock.
+     log debug "trying to acquire lock /var/run/usbmount/.mount.lock"
+-    lockfile-create --retry 3 /var/run/usbmount/.mount || \
+-	{ log err "cannot acquire lock /var/run/usbmount/.mount.lock"; exit 1; }
+-    trap '( lockfile-remove /var/run/usbmount/.mount )' 0
++    mkdir -p /var/run/usbmount/
++    touch /var/run/usbmount/.mount.lock
++    exec 3</var/run/usbmount/.mount.lock
++    flock -x 3
+     log debug "acquired lock /var/run/usbmount/.mount.lock"
+ 
+     if ! echo $ID_FS_USAGE | egrep -q "(filesystem|disklabel)"; then
+-- 
+2.20.1
+

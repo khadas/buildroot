@@ -1,23 +1,23 @@
-From 49975f3f08605c5917d8848245d1ffaefa536816 Mon Sep 17 00:00:00 2001
+From 027b04dc44b82447ca6c2760e67320831fba726a Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Wed, 28 Feb 2024 18:05:41 +0800
 Subject: [PATCH 11/11] Support multiple monitors
 
 Tested on RK3588 EVB with:
-1/ FRECON_OUTPUT_CONFIG=fit:270,DSI-1=:90 frecon
+1/ FRECON_OUTPUT_CONFIG=fit:270:1280x800,DSI-1=:90: frecon
 2/ Connect HDMI
 
 Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- drm.c  | 686 +++++++++++++++++++++++++++++++++------------------------
- drm.h  |  63 ++++--
+ drm.c  | 703 +++++++++++++++++++++++++++++++++------------------------
+ drm.h  |  66 ++++--
  fb.c   | 416 ++++++++++++++++++----------------
  fb.h   |  79 +++----
  main.c |   3 +-
- 5 files changed, 705 insertions(+), 542 deletions(-)
+ 5 files changed, 726 insertions(+), 541 deletions(-)
 
 diff --git a/drm.c b/drm.c
-index 471210e..da34927 100644
+index 471210e..1ba6fd9 100644
 --- a/drm.c
 +++ b/drm.c
 @@ -16,71 +16,51 @@
@@ -161,7 +161,7 @@ index 471210e..da34927 100644
  static bool drm_is_internal(unsigned type)
  {
  	unsigned t;
-@@ -216,114 +160,312 @@ static drmModeConnector* find_first_connected_connector(drm_t* drm, bool interna
+@@ -216,114 +160,330 @@ static drmModeConnector* find_first_connected_connector(drm_t* drm, bool interna
  	return NULL;
  }
  
@@ -269,12 +269,13 @@ index 471210e..da34927 100644
 +	return name;
 +}
 +
-+static bool drm_get_mode(drm_t* drm, uint32_t connector_id, drmModeModeInfo *mode)
++static bool drm_get_mode(drm_t* drm, drm_output_t *output)
 +{
 +	drmModeConnector *connector;
++	drmModeModeInfo *preferred = NULL, *mode;
 +	int i;
 +
-+	connector = drmModeGetConnector(drm->fd, connector_id);
++	connector = drmModeGetConnector(drm->fd, output->connector_id);
 +	if (!connector)
  		return false;
  
@@ -288,16 +289,32 @@ index 471210e..da34927 100644
 -				DRM_MODE_TYPE_PREFERRED) {
 -			drm->console_mode_info = main_monitor_connector->modes[modes];
 +	for (i = 0; i < connector->count_modes; i++) {
-+		*mode = connector->modes[i];
-+		if (mode->type & DRM_MODE_TYPE_PREFERRED)
++		mode = &connector->modes[i];
++
++		if (!preferred && mode->type & DRM_MODE_TYPE_PREFERRED)
++			preferred = mode;
++
++		if (mode->hdisplay == output->preferred_width &&
++		    mode->vdisplay == output->preferred_height) {
++			preferred = mode;
  			break;
--		}
+ 		}
  	}
 -	/* If there was no preferred mode use first one. */
 -	if (modes == main_monitor_connector->count_modes)
 -		drm->console_mode_info = main_monitor_connector->modes[0];
- 
+-
 -	drmModeFreeConnector(main_monitor_connector);
+ 
+-	get_connector_path(drm, drm->console_connector_id, NULL, &console_crtc_id);
++	if (preferred)
++		output->mode = *preferred;
++	else
++		output->mode = connector->modes[connector->count_modes - 1];
+ 
+-	if (!console_crtc_id)
+-		/* No existing path, find one. */
+-		find_crtc_for_connector(drm, drm->console_connector_id, &console_crtc_id);
 +	drmModeFreeConnector(connector);
 +	return true;
 +err:
@@ -305,28 +322,23 @@ index 471210e..da34927 100644
 +	return false;
 +}
  
--	get_connector_path(drm, drm->console_connector_id, NULL, &console_crtc_id);
+-	if (!console_crtc_id)
+-		/* Cannot find CRTC for connector. We will not be able to use it. */
 +static bool drm_remove_output(drm_t* drm, uint32_t connector_id)
 +{
 +	if (!connector_id)
-+		return false;
-+
+ 		return false;
+ 
+-	return true;
 +	drm_for_each_output(drm, output) {
 +		if (output->connector_id != connector_id)
 +			continue;
- 
--	if (!console_crtc_id)
--		/* No existing path, find one. */
--		find_crtc_for_connector(drm, drm->console_connector_id, &console_crtc_id);
++
 +		LOG(INFO, "Removing output(%s)", output->name);
- 
--	if (!console_crtc_id)
--		/* Cannot find CRTC for connector. We will not be able to use it. */
--		return false;
++
 +		drmModeSetCrtc(drm->fd, output->crtc_id, -1, 0, 0,
 +			       NULL, -1, NULL);
- 
--	return true;
++
 +		free(output->name);
 +
 +		/* Hacky way to remove entry */
@@ -372,7 +384,7 @@ index 471210e..da34927 100644
 +	if (!output->name)
 +		goto err;
 +
-+	if (!drm_get_mode(drm, connector_id, &output->mode))
++	if (!drm_get_mode(drm, output))
 +		goto err;
 +
 +	if (!get_crtc_for_connector(drm, connector_id, &output->crtc_id) &&
@@ -415,7 +427,7 @@ index 471210e..da34927 100644
 +	if (!output->plane_id)
 +		goto err;
 +
-+	/* For example: FRECON_OUTPUT_CONFIG="fit:0,DSI-1=stretch:90" */
++	/* For example: FRECON_OUTPUT_CONFIG="fit:0,DSI-1=stretch:90:1920x1080" */
 +	if ((env = getenv("FRECON_OUTPUT_CONFIG"))) {
 +		char fill[64] = "\0";
 +		int rotation = 0;
@@ -424,7 +436,12 @@ index 471210e..da34927 100644
 +			env = strstr(env, output->name) +
 +				strlen(output->name) + 1;
 +
++		output->preferred_width = output->preferred_height = 0;
 +		sscanf(env, "%[a-z]", fill);
++		sscanf(env, "%*[^0-9,]%d", &rotation);
++		sscanf(env, "%*[^0-9,]%*d:%dx%d",
++		       &output->preferred_width, &output->preferred_height);
++
 +		if (!strcmp(fill, "fit"))
 +			output->fill = DRM_FILL_FIT;
 +		else if (!strcmp(fill, "stretch"))
@@ -432,7 +449,6 @@ index 471210e..da34927 100644
 +		else if (!strcmp(fill, "none"))
 +			output->fill = DRM_FILL_NONE;
 +
-+		sscanf(env, "%*[^0-9,]%d", &rotation);
 +		if (rotation == 90)
 +			output->rotation = DRM_ROTATION_90;
 +		else if (rotation == 180)
@@ -456,10 +472,11 @@ index 471210e..da34927 100644
 +
 +	drm->count_outputs ++;
 +
-+	LOG(INFO, "Added output(%s): fill=%s, rotate=%d", output->name,
++	LOG(INFO, "Added output(%s): fill=%s, rotate=%d, %dx%d", output->name,
 +	    (output->fill == DRM_FILL_FIT) ? "fit" :
 +	    (output->fill == DRM_FILL_STRETCH ? "stretch" : "none"),
-+	    output->rotation * 90);
++	    output->rotation * 90,
++	    output->preferred_width, output->preferred_height);
 +
 +	return true;
 +err:
@@ -532,7 +549,7 @@ index 471210e..da34927 100644
  {
  	int ret;
  	uint64_t atomic = 0;
-@@ -364,15 +506,6 @@ drm_t* drm_scan(void)
+@@ -364,15 +524,6 @@ drm_t* drm_scan(void)
  		return NULL;
  	}
  
@@ -548,7 +565,7 @@ index 471210e..da34927 100644
  	version = drmGetVersion(drm->fd);
  	if (version) {
  		LOG(INFO,
-@@ -388,198 +521,165 @@ drm_t* drm_scan(void)
+@@ -388,198 +539,166 @@ drm_t* drm_scan(void)
  	return drm;
  }
  
@@ -661,7 +678,7 @@ index 471210e..da34927 100644
 +static bool drm_got_output(drm_t *drm, uint32_t connector_id)
 +{
 +	drm_for_each_output(drm, output) {
-+		drmModeModeInfo mode;
++		drmModeModeInfo mode = output->mode;
  
 -	for (uint32_t i = 0; i < crtc_props->count_props; i++) {
 -		drmModePropertyPtr prop;
@@ -682,12 +699,13 @@ index 471210e..da34927 100644
 -			}
 +		/* Check connected and the preferred mode is unchanged */
 +		if (drm_is_connected(drm, connector_id)) {
-+		    if (drm_get_mode(drm, connector_id, &mode) &&
++		    if (drm_get_mode(drm, output) &&
 +			!strcmp(mode.name, output->mode.name))
 +			    return true;
  		}
 -		drmModeFreeProperty(prop);
 +
++		output->mode = mode;
 +		break;
  	}
 -	drmModeFreeObjectProperties(crtc_props);
@@ -870,10 +888,10 @@ index 471210e..da34927 100644
 +                         0, 0, src_w << 16, src_h << 16);
  }
 diff --git a/drm.h b/drm.h
-index ff42efc..7f8464a 100644
+index ff42efc..4afa343 100644
 --- a/drm.h
 +++ b/drm.h
-@@ -7,30 +7,67 @@
+@@ -7,30 +7,70 @@
  #ifndef DRM_H
  #define DRM_H
  
@@ -909,6 +927,9 @@ index ff42efc..7f8464a 100644
 +
 +	drm_fill_t fill;
 +	drm_rotation_t rotation;
++
++	uint32_t preferred_width;
++	uint32_t preferred_height;
 +} drm_output_t;
 +
  typedef struct _drm_t {

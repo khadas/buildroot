@@ -8,3 +8,11 @@ config BR2_PACKAGE_LIBTELNET
 	  clients, or proxies.
 
 	  https://github.com/seanmiddleditch/libtelnet
+
+if BR2_PACKAGE_LIBTELNET
+
+config BR2_PACKAGE_LIBTELNET_STATIC
+	bool "Enable static"
+	default y if BR2_STATIC_LIBS
+
+endif

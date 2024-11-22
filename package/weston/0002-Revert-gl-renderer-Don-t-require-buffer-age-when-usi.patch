@@ -1,7 +1,7 @@
-From d11cb4a4c8e04fda1d383a50fccbe88ca6aafeab Mon Sep 17 00:00:00 2001
+From eb5e32ac80d66c08116dcf02a380ef7cb654c5fa Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Tue, 11 Jan 2022 16:08:40 +0800
-Subject: [PATCH 02/95] Revert "gl-renderer: Don't require buffer age when
+Subject: [PATCH 02/99] Revert "gl-renderer: Don't require buffer age when
  using partial update"
 
 This reverts commit a2a8d382e38fdee65adb91ce7b4e6fb280389c8f.

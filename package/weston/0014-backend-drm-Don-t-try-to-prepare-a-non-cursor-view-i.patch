@@ -1,0 +1,36 @@
+From 62291869bb929ed91f5c5c1eb0ec4a13bb7a1f11 Mon Sep 17 00:00:00 2001
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+Date: Thu, 30 Jun 2022 09:16:58 +0800
+Subject: [PATCH 014/100] backend-drm: Don't try to prepare a non-cursor view
+ in renderer-only mode
+
+Doing this might cause unnecessary DRM importing, which might result in
+an error when the DRM's memory address mapping is nearly full.
+
+Return before attempting to create drm_fb to avoid that, since it will
+fail in the later check anyway.
+
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
+ libweston/backend-drm/state-propose.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/libweston/backend-drm/state-propose.c b/libweston/backend-drm/state-propose.c
+index 2b42e3dcc..4e8fccb4c 100644
+--- a/libweston/backend-drm/state-propose.c
++++ b/libweston/backend-drm/state-propose.c
+@@ -404,6 +404,11 @@ drm_output_find_plane_for_view(struct drm_output_state *state,
+ 		return NULL;
+ 	}
+ 
++	/* filter out non-cursor views in renderer-only mode */
++	if (mode == DRM_OUTPUT_PROPOSE_STATE_RENDERER_ONLY &&
++	    ev->layer_link.layer != &b->compositor->cursor_layer)
++			return NULL;
++
+ 	buffer = ev->surface->buffer_ref.buffer;
+ 	if (buffer->type == WESTON_BUFFER_SOLID) {
+ 		pnode->try_view_on_plane_failure_reasons |=
+-- 
+2.20.1
+

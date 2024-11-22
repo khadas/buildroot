@@ -150,7 +150,7 @@ main()
 			if [ ! -f "$CONFIG" ]; then
 				unset RK_BOARD
 				echo "No available Rockchip configs${1:+" for: $1"}"
-				return
+				return 1
 			fi
 			;;
 		1)
@@ -187,9 +187,7 @@ main()
 	alias breinstall-update='bpkg_run reinstall-update'
 }
 
-main "$@"
-
-if [ "$BASH_SOURCE" == "$0" ];then
-	# This script is executed directly
+if main "$@" && [ "$BASH_SOURCE" == "$0" ]; then
+	echo This script is executed directly
 	/bin/bash
 fi

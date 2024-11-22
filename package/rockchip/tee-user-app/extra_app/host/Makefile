@@ -14,7 +14,11 @@ OPTEE_CLIENT_EXPORT ?= ../../client_export/
 ifeq "$(COMPILE_NS_USER)" "64"
 OPTEE_CLIENT_LIB ?= ../../../../bin/optee_v2/lib/arm64/
 else
+ifeq "$(TOOLCHAIN_UCLIBC)" "y"
+OPTEE_CLIENT_LIB ?= ../../../../bin/optee_v2/uclibc_lib/arm/
+else
 OPTEE_CLIENT_LIB ?= ../../../../bin/optee_v2/lib/arm/
+endif
 endif
 
 CC		?= $(CROSS_COMPILE)gcc

@@ -15,4 +15,10 @@ LIBTELNET_LICENSE_FILES = COPYING
 # for 0001-fix-compilation-without-zlib.patch
 LIBTELNET_AUTORECONF = YES
 
+ifeq ($(BR2_PACKAGE_LIBTELNET_STATIC),y)
+LIBTELNET_CONF_OPTS += --enable-static --enable-util
+
+LIBTELNET_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -static"
+endif
+
 $(eval $(autotools-package))

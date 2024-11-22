@@ -404,6 +404,7 @@ config BR2_SYSTEM_BIN_SH
 
 choice
 	prompt "Run a shell on serial console after boot"
+	default BR2_TARGET_SERIAL_SHELL_SH if BR2_INIT_BUSYBOX
 	help
 	  Select a shell to use.
 
@@ -411,6 +412,7 @@ config BR2_TARGET_SERIAL_SHELL_GETTY
 	bool "/sbin/getty (login prompt)"
 	select BR2_TARGET_GENERIC_GETTY
 
+if BR2_INIT_BUSYBOX
 config BR2_TARGET_SERIAL_SHELL_SH
 	bool "/bin/sh"
 
@@ -419,6 +421,7 @@ config BR2_TARGET_SERIAL_SHELL_LOGIN
 
 config BR2_TARGET_SERIAL_SHELL_NONE
 	bool "none"
+endif
 
 endchoice
 

@@ -21,9 +21,20 @@ define RKWIFIBT_APP_INSTALL_TARGET_CMDS
 	$(RKWIFIBT_APP_INSTALL_COMMON)
 endef
 
+ARCH_DIR = COMMON
+
+ifneq ($(BR2_PACKAGE_RK3506),)
+ARCH_DIR = RK3308
+else ifneq ($(BR2_PACKAGE_RK3308),)
+ARCH_DIR = RK3308
+else ifneq ($(BR2_PACKAGE_RV1126_RV1109),)
+ARCH_DIR = RV1126
+endif
+
 define RKWIFIBT_PRE_BUILD_HOOK
-	$(INSTALL) -D -m 0755 $(@D)/$(SODIR)/librkwifibt.so $(TARGET_DIR)/usr/lib/
-	$(INSTALL) -D -m 0755 $(@D)/$(SODIR)/librkwifibt.so $(STAGING_DIR)/usr/lib/
+	$(INSTALL) -D -m 0755 $(@D)/$(ARCH_DIR)/$(SODIR)/librkwifibt.so $(TARGET_DIR)/usr/lib/
+	$(INSTALL) -D -m 0755 $(@D)/$(ARCH_DIR)/$(SODIR)/librkwifibt.so $(STAGING_DIR)/usr/lib/
+	$(INSTALL) -D -m 0755 $(@D)/include/* $(STAGING_DIR)/usr/include/
 endef
 
 RKWIFIBT_APP_PRE_BUILD_HOOKS += RKWIFIBT_PRE_BUILD_HOOK

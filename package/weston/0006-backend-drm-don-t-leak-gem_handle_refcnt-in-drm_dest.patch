@@ -1,0 +1,28 @@
+From faf845e3665d1393568b9f3d887fbdb7c3b8d175 Mon Sep 17 00:00:00 2001
+From: Ray Smith <rsmith@brightsign.biz>
+Date: Tue, 19 Dec 2023 11:43:55 +0000
+Subject: [PATCH 006/100] backend-drm: don't leak gem_handle_refcnt in
+ drm_destroy
+
+Signed-off-by: Ray Smith <rsmith@brightsign.biz>
+---
+ libweston/backend-drm/drm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index b46ed6308..18e36d5cf 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -3392,6 +3392,9 @@ drm_destroy(struct weston_backend *backend)
+ 	weston_launcher_close(ec->launcher, device->drm.fd);
+ 	weston_launcher_destroy(ec->launcher);
+ 
++	if (device->gem_handle_refcnt)
++		hash_table_destroy(device->gem_handle_refcnt);
++
+ 	free(device->drm.filename);
+ 	free(device);
+ 	free(b);
+-- 
+2.20.1
+

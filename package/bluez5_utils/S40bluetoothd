@@ -3,7 +3,7 @@
 DAEMON="bluetoothd"
 PIDFILE="/var/run/$DAEMON.pid"
 
-BLUETOOTHD_ARGS="-n"
+BLUETOOTHD_ARGS="-n -d"
 
 # shellcheck source=/dev/null
 [ -r "/etc/default/$DAEMON" ] && . "/etc/default/$DAEMON"

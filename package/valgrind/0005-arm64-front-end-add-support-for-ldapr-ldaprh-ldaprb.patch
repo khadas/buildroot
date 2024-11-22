@@ -1,4 +1,4 @@
-From cdd8388a7748655b7532140f2aeb191731252b83 Mon Sep 17 00:00:00 2001
+From eaa7c870da2352cde5eae219f7080ffa19991d8a Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Wed, 7 Feb 2024 09:38:32 +0800
 Subject: [PATCH 5/5] arm64 front end: add support for 'ldapr', 'ldaprh',
@@ -13,10 +13,10 @@ Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
  1 file changed, 9 insertions(+), 3 deletions(-)
 
 diff --git a/VEX/priv/guest_arm64_toIR.c b/VEX/priv/guest_arm64_toIR.c
-index 1cc03eb..1c9b0c0 100644
+index 3d8b7fe..1a387cb 100644
 --- a/VEX/priv/guest_arm64_toIR.c
 +++ b/VEX/priv/guest_arm64_toIR.c
-@@ -7062,14 +7062,20 @@ Bool dis_ARM64_load_store(/*MB_OUT*/DisResult* dres, UInt insn,
+@@ -7061,14 +7061,20 @@ Bool dis_ARM64_load_store(/*MB_OUT*/DisResult* dres, UInt insn,
  
     /* ------------------ LDA{R,RH,RB} ------------------ */
     /* ------------------ STL{R,RH,RB} ------------------ */

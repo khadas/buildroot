@@ -66,7 +66,7 @@ index 81d657b..b919f12 100644
 +ENV{ID_FS_TYPE}=="", GOTO="usbmount_end"
 +
 +KERNEL=="mmcblk*", ATTRS{type}=="SD", RUN+="/usr/share/usbmount/usbmount add sd"
-+ENV{ID_BUS}=="usb", RUN+="/usr/share/usbmount/usbmount add usb"
++KERNEL=="sd*", RUN+="/usr/share/usbmount/usbmount add usb"
 +
 +LABEL="usbmount_end"
 -- 

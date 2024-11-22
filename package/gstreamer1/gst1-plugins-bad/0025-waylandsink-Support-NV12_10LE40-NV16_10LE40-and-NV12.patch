@@ -1,7 +1,7 @@
-From 2bd8e076407ed807e74ba5787c41a2d29252cf38 Mon Sep 17 00:00:00 2001
+From 9d0e971ca6de75d320dd5c299a6a2e1d96b71ef2 Mon Sep 17 00:00:00 2001
 From: Jeffy Chen <jeffy.chen@rock-chips.com>
 Date: Fri, 12 Nov 2021 11:14:37 +0800
-Subject: [PATCH 25/46] waylandsink: Support NV12_10LE40 NV16_10LE40 and
+Subject: [PATCH 25/49] waylandsink: Support NV12_10LE40 NV16_10LE40 and
  NV12|NV12_10LE40|NV16 (AFBC)
 
 Tested on RK356x with:
@@ -443,7 +443,7 @@ index bc36a08..08ceb3c 100644
  void gst_wl_videoformat_init_once (void);
  
 diff --git a/gst-libs/gst/wayland/gstwlwindow.c b/gst-libs/gst/wayland/gstwlwindow.c
-index 19ffae0..95a779b 100644
+index 61ec525..a6f07bc 100644
 --- a/gst-libs/gst/wayland/gstwlwindow.c
 +++ b/gst-libs/gst/wayland/gstwlwindow.c
 @@ -66,6 +66,9 @@ typedef struct _GstWlWindowPrivate
@@ -486,7 +486,7 @@ index 19ffae0..95a779b 100644
  void
  gst_wl_window_ensure_fill_mode (GstWlWindow * self,
      GstWlWindowFillMode fill_mode)
-@@ -512,16 +538,28 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
+@@ -527,16 +553,28 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
    gint64 video_x = 0, video_y = 0;
    gint64 video_width = priv->video_width;
    gint64 video_height = priv->video_height;
@@ -517,7 +517,7 @@ index 19ffae0..95a779b 100644
        src.w = scaled_width;
        src.h = video_height;
        break;
-@@ -529,6 +567,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
+@@ -544,6 +582,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
      case WL_OUTPUT_TRANSFORM_270:
      case WL_OUTPUT_TRANSFORM_FLIPPED_90:
      case WL_OUTPUT_TRANSFORM_FLIPPED_270:
@@ -526,7 +526,7 @@ index 19ffae0..95a779b 100644
        src.w = video_height;
        src.h = scaled_width;
        swapped = TRUE;
-@@ -631,6 +671,8 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
+@@ -653,6 +693,8 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
      wl_subsurface_set_sync (priv->video_subsurface);
      gst_wl_window_resize_video_surface (self, FALSE);
      gst_wl_window_set_opaque (self, info);

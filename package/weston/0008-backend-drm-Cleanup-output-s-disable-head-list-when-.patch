@@ -1,0 +1,49 @@
+From a455c3f5de13efcd208bb992ce3b5e2bc3ad93fb Mon Sep 17 00:00:00 2001
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+Date: Wed, 21 Feb 2024 09:30:56 +0800
+Subject: [PATCH 008/100] backend-drm: Cleanup output's disable head list when
+ destroying it
+
+Avoid memory use-after-free when the trying to remove entries from an
+already freed list later.
+
+Also add missing removal in drm_output_detach_head() and drm_head_destroy().
+
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
+ libweston/backend-drm/drm.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index 56215a04e..8a90ea420 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -1680,6 +1680,7 @@ drm_output_detach_head(struct weston_output *output_base,
+ 		return;
+ 
+ 	/* Drop connectors that should no longer be driven on next repaint. */
++	wl_list_remove(&head->disable_head_link);
+ 	wl_list_insert(&output->disable_head, &head->disable_head_link);
+ }
+ 
+@@ -2375,6 +2376,8 @@ drm_output_destroy(struct weston_output *base)
+ 
+ 	assert(output->hdr_output_metadata_blob_id == 0);
+ 
++	wl_list_remove(&output->disable_head);
++
+ 	free(output);
+ }
+ 
+@@ -2698,6 +2701,8 @@ drm_head_destroy(struct weston_head *base)
+ 	if (head->backlight)
+ 		backlight_destroy(head->backlight);
+ 
++	wl_list_remove(&head->disable_head_link);
++
+ 	free(head);
+ }
+ 
+-- 
+2.20.1
+

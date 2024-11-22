@@ -24,6 +24,13 @@ config BR2_TARGET_ROOTFS_UBI_SQUASHFS
 
 endchoice
 
+config BR2_TARGET_ROOTFS_UBI_SQUASHFS_STATIC
+	bool "squashfs use static vol type"
+	depends on BR2_TARGET_ROOTFS_UBI_SQUASHFS
+	default y
+	help
+	  Use static vol type for squashfs.
+
 config BR2_TARGET_ROOTFS_UBI_MINIOSIZE
 	hex "minimum I/O unit size"
 	default BR2_TARGET_ROOTFS_UBIFS_MINIOSIZE if BR2_TARGET_ROOTFS_UBI_UBIFS

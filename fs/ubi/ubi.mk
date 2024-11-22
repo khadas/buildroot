@@ -19,7 +19,12 @@ UBI_VOL_TYPE = dynamic
 else
 ROOTFS_UBI_DEPENDENCIES = rootfs-squashfs host-mtd
 UBI_ROOTFS_NAME = $(ROOTFS_SQUASHFS_FINAL_IMAGE_NAME)
+ifeq ($(BR2_TARGET_ROOTFS_UBI_SQUASHFS_STATIC),y)
 UBI_VOL_TYPE = static
+else
+UBI_VOL_TYPE = dynamic
+endif
+
 endif
 
 ifeq ($(BR2_TARGET_ROOTFS_UBI_USE_CUSTOM_CONFIG),y)

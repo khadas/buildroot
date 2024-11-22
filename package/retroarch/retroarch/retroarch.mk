@@ -4,20 +4,17 @@
 #
 ###############################################################################
 
-RETROARCH_VERSION = 3e27a504ed3b3675d377e985094f3fdb267237bc
-RETROARCH_SITE = https://github.com/libretro/RetroArch.git
-RETROARCH_SITE_METHOD = git
+RETROARCH_VERSION = 08dd2a8f7bdd3881b2139f265670910b3520ac9d
+RETROARCH_SITE = $(call github,libretro,RetroArch,$(RETROARCH_VERSION))
 RETROARCH_DEPENDENCIES = host-pkgconf
 
 RETROARCH_CONF_OPTS += --disable-oss
-RETROARCH_CONF_OPTS += --disable-python
 RETROARCH_CONF_OPTS += --disable-pulse
 RETROARCH_CONF_OPTS += --disable-cheevos
 RETROARCH_CONF_OPTS += --disable-freetype
 RETROARCH_CONF_OPTS += --disable-7zip
 RETROARCH_CONF_OPTS += --disable-builtinflac
 RETROARCH_CONF_OPTS += --disable-ssl
-RETROARCH_CONF_OPTS += --disable-libxml2
 RETROARCH_CONF_OPTS += --disable-ffmpeg
 RETROARCH_CONF_OPTS += --disable-qt
 

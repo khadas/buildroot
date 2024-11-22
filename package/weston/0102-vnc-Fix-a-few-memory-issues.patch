@@ -1,0 +1,170 @@
+From dc2eb47c1e8b2ccc21c71c72accc5f4f3e158c71 Mon Sep 17 00:00:00 2001
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+Date: Wed, 10 Jul 2024 16:45:54 +0800
+Subject: [PATCH 102/107] vnc: Fix a few memory issues
+
+1/ Avoid using VNC's seat as udev_seat.
+2/ Destroy VNC outputs before shutting it down.
+3/ Add a sanity check for VNC output when cleaning up VNC clients.
+
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
+ libweston/backend-vnc/vnc.c | 19 +++++++++-------
+ libweston/libinput-seat.c   | 43 +++++++++++++++++++++++++++++--------
+ 2 files changed, 45 insertions(+), 17 deletions(-)
+
+diff --git a/libweston/backend-vnc/vnc.c b/libweston/backend-vnc/vnc.c
+index 1c56e21..a341e66 100644
+--- a/libweston/backend-vnc/vnc.c
++++ b/libweston/backend-vnc/vnc.c
+@@ -543,10 +543,13 @@ vnc_client_cleanup(struct nvnc_client *client)
+ 	struct timespec now;
+ 	int delay_ms;
+ 
+-	wl_list_remove(&peer->link);
++	/* The output might be destroyed */
++	if (output) {
++		wl_list_remove(&peer->link);
+ 
+-	if (wl_list_empty(&output->peers))
+-		weston_output_power_off(&output->base);
++		if (wl_list_empty(&output->peers))
++			weston_output_power_off(&output->base);
++	}
+ 
+ 	weston_log("VNC Client disconnected\n");
+ 
+@@ -1148,6 +1151,11 @@ static void
+ vnc_shutdown(struct weston_backend *base)
+ {
+ 	struct vnc_backend *backend = container_of(base, struct vnc_backend, base);
++	struct weston_compositor *ec = backend->compositor;
++	struct weston_head *head, *next;
++
++	wl_list_for_each_safe(head, next, &ec->head_list, compositor_link)
++		vnc_head_destroy(head);
+ 
+ 	nvnc_close(backend->server);
+ }
+@@ -1156,8 +1164,6 @@ static void
+ vnc_destroy(struct weston_backend *base)
+ {
+ 	struct vnc_backend *backend = container_of(base, struct vnc_backend, base);
+-	struct weston_compositor *ec = backend->compositor;
+-	struct weston_head *head, *next;
+ 
+ 	wl_list_remove(&backend->base.link);
+ 
+@@ -1167,9 +1173,6 @@ vnc_destroy(struct weston_backend *base)
+ 
+ 	aml_unref(backend->aml);
+ 
+-	wl_list_for_each_safe(head, next, &ec->head_list, compositor_link)
+-		vnc_head_destroy(head);
+-
+ 	xkb_keymap_unref(backend->xkb_keymap);
+ 
+ 	if (backend->debug)
+diff --git a/libweston/libinput-seat.c b/libweston/libinput-seat.c
+index eb8f756..60c55ec 100644
+--- a/libweston/libinput-seat.c
++++ b/libweston/libinput-seat.c
+@@ -50,6 +50,14 @@ udev_seat_create(struct udev_input *input, const char *seat_name);
+ static void
+ udev_seat_destroy(struct udev_seat *seat);
+ 
++static void
++udev_seat_led_update(struct weston_seat *seat_base, enum weston_led leds);
++static inline bool
++is_udev_seat(struct weston_seat *seat)
++{
++	return seat->led_update == udev_seat_led_update;
++}
++
+ static struct udev_seat *
+ get_udev_seat(struct udev_input *input, struct libinput_device *device)
+ {
+@@ -316,6 +324,7 @@ udev_input_enable(struct udev_input *input)
+ 	struct wl_event_loop *loop;
+ 	struct weston_compositor *c = input->compositor;
+ 	int fd;
++	struct weston_seat *seat_base;
+ 	struct udev_seat *seat;
+ 	int devices_found = 0;
+ 
+@@ -338,7 +347,12 @@ udev_input_enable(struct udev_input *input)
+ 		process_events(input);
+ 	}
+ 
+-	wl_list_for_each(seat, &input->compositor->seat_list, base.link) {
++	wl_list_for_each(seat_base, &input->compositor->seat_list, link) {
++		if (!is_udev_seat(seat_base))
++			continue;
++
++		seat = (struct udev_seat *)seat_base;
++
+ 		evdev_notify_keyboard_focus(&seat->base, &seat->devices_list);
+ 
+ 		if (!wl_list_empty(&seat->devices_list))
+@@ -421,12 +435,14 @@ udev_input_init(struct udev_input *input, struct weston_compositor *c,
+ void
+ udev_input_destroy(struct udev_input *input)
+ {
+-	struct udev_seat *seat, *next;
++	struct weston_seat *seat, *next;
+ 
+ 	if (input->libinput_source)
+ 		wl_event_source_remove(input->libinput_source);
+-	wl_list_for_each_safe(seat, next, &input->compositor->seat_list, base.link)
+-		udev_seat_destroy(seat);
++	wl_list_for_each_safe(seat, next, &input->compositor->seat_list, link) {
++		if (is_udev_seat(seat))
++			udev_seat_destroy((struct udev_seat *)seat);
++	}
+ 	libinput_unref(input->libinput);
+ }
+ 
+@@ -527,11 +543,14 @@ udev_seat_destroy(struct udev_seat *seat)
+ struct udev_seat *
+ udev_seat_get_named(struct udev_input *input, const char *seat_name)
+ {
+-	struct udev_seat *seat;
++	struct weston_seat *seat;
++
++	wl_list_for_each(seat, &input->compositor->seat_list, link) {
++		if (!is_udev_seat(seat))
++			continue;
+ 
+-	wl_list_for_each(seat, &input->compositor->seat_list, base.link) {
+-		if (strcmp(seat->base.seat_name, seat_name) == 0)
+-			return seat;
++		if (strcmp(seat->seat_name, seat_name) == 0)
++			return (struct udev_seat *) seat;
+ 	}
+ 
+ 	return udev_seat_create(input, seat_name);
+@@ -542,6 +561,7 @@ weston_output_bind_input(struct weston_output *output, const char *match)
+ {
+ 	struct weston_compositor *compositor = output->compositor;
+ 	struct evdev_device *device;
++	struct weston_seat *seat_base;
+ 	struct udev_seat *seat;
+ 	const char *sysname, *name;
+ 	int len = strlen(match);
+@@ -551,7 +571,12 @@ weston_output_bind_input(struct weston_output *output, const char *match)
+ 	if (len && match[len - 1] == '*')
+ 		len--;
+ 
+-	wl_list_for_each(seat, &compositor->seat_list, base.link) {
++	wl_list_for_each(seat_base, &compositor->seat_list, link) {
++		if (!is_udev_seat(seat_base))
++			continue;
++
++		seat = (struct udev_seat *)seat_base;
++
+ 		wl_list_for_each(device, &seat->devices_list, link) {
+ 			if (clear) {
+ 				/* Clear all bounded inputs */
+-- 
+2.20.1
+

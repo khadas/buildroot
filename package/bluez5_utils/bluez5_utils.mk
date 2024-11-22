@@ -5,9 +5,10 @@
 ################################################################################
 
 # Keep the version and patches in sync with bluez5_utils-headers
-BLUEZ5_UTILS_VERSION = 5.72
+BLUEZ5_UTILS_VERSION = 5.77
 BLUEZ5_UTILS_SOURCE = bluez-$(BLUEZ5_UTILS_VERSION).tar.xz
 BLUEZ5_UTILS_SITE = $(BR2_KERNEL_MIRROR)/linux/bluetooth
+BLUEZ5_UTILS_AUTORECONF = YES
 BLUEZ5_UTILS_INSTALL_STAGING = YES
 BLUEZ5_UTILS_LICENSE = GPL-2.0+, LGPL-2.1+
 BLUEZ5_UTILS_LICENSE_FILES = COPYING COPYING.LIB
@@ -22,6 +23,7 @@ BLUEZ5_UTILS_DEPENDENCIES = \
 BLUEZ5_UTILS_CONF_OPTS = \
 	--enable-library \
 	--disable-cups \
+	--disable-datafiles \
 	--disable-manpages \
 	--disable-asan \
 	--disable-lsan \
@@ -197,6 +199,10 @@ endif
 define BLUEZ5_UTILS_INSTALL_INIT_SYSV
 	$(INSTALL) -m 0755 -D package/bluez5_utils/S40bluetoothd \
 		$(TARGET_DIR)/etc/init.d/S40bluetoothd
+	$(INSTALL) -m 0644 -D $(@D)/$(BLUEZ5_UTILS_SUBDIR)/src/bluetooth.conf \
+		$(TARGET_DIR)/etc/dbus-1/system.d/bluetooth.conf
+	$(INSTALL) -m 0600 -D $(@D)/$(BLUEZ5_UTILS_SUBDIR)/src/main.conf \
+		$(TARGET_DIR)/etc/main.conf
 endef
 
 $(eval $(autotools-package))

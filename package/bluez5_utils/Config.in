@@ -23,9 +23,9 @@ if BR2_PACKAGE_BLUEZ5_UTILS
 
 config BR2_PACKAGE_BLUEZ5_UTILS_OBEX
 	bool "build OBEX support"
+	default y
 	depends on BR2_INSTALL_LIBSTDCPP
 	select BR2_PACKAGE_LIBICAL
-	default y
 	help
 	  Enable OBEX support.
 
@@ -34,8 +34,8 @@ comment "OBEX support needs a toolchain w/ C++"
 
 config BR2_PACKAGE_BLUEZ5_UTILS_CLIENT
 	bool "build CLI client"
-	select BR2_PACKAGE_READLINE
 	default y
+	select BR2_PACKAGE_READLINE
 	help
 	  Build the command line client "bluetoothctl".
 
@@ -54,8 +54,8 @@ config BR2_PACKAGE_BLUEZ5_UTILS_TOOLS
 
 config BR2_PACKAGE_BLUEZ5_UTILS_DEPRECATED
 	bool "install deprecated tools"
-	depends on BR2_PACKAGE_BLUEZ5_UTILS_CLIENT || BR2_PACKAGE_BLUEZ5_UTILS_TOOLS
 	default y
+	depends on BR2_PACKAGE_BLUEZ5_UTILS_CLIENT || BR2_PACKAGE_BLUEZ5_UTILS_TOOLS
 	help
 	  Build deprecated tools.
 
@@ -85,9 +85,9 @@ config BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HEALTH
 
 config BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HID
 	bool "build hid plugin"
+	default y
 	depends on BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_18
 	select BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HOG
-	default y
 	help
 	  Build plugin for HID (input) profiles.
 
@@ -96,6 +96,7 @@ comment "hid plugin needs a toolchain w/ headers >= 3.18"
 
 config BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HOG
 	bool "build hog plugin"
+	default y
 	depends on BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_18
 	help
 	  Build plugin for HoG (input) profiles.
@@ -124,6 +125,7 @@ config BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_MIDI
 
 config BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NETWORK
 	bool "build network plugin"
+	default y
 	help
 	  Build plugin for PANU, NAP, GN profiles.
 
