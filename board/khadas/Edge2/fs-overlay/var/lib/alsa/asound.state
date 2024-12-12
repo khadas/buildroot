@@ -629,7 +629,7 @@ state.rockchipes8316c {
 	control.18 {
 		iface MIXER
 		name 'DAC Notch Filter Switch'
-		value true
+		value false
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -692,7 +692,7 @@ state.rockchipes8316c {
 	control.24 {
 		iface MIXER
 		name 'ADC Capture Volume'
-		value 0
+		value 192
 		comment {
 			access 'read write'
 			type INTEGER
@@ -700,13 +700,13 @@ state.rockchipes8316c {
 			range '0 - 192'
 			dbmin -9999999
 			dbmax 0
-			dbvalue.0 -9999999
+			dbvalue.0 0
 		}
 	}
 	control.25 {
 		iface MIXER
 		name 'ADC PGA Gain Volume'
-		value 0
+		value 10
 		comment {
 			access 'read write'
 			type INTEGER
@@ -714,7 +714,7 @@ state.rockchipes8316c {
 			range '0 - 10'
 			dbmin -350
 			dbmax 2400
-			dbvalue.0 -350
+			dbvalue.0 2400
 		}
 	}
 	control.26 {
@@ -750,7 +750,7 @@ state.rockchipes8316c {
 	control.29 {
 		iface MIXER
 		name 'ALC Capture Max Volume'
-		value 28
+		value 19
 		comment {
 			access 'read write'
 			type INTEGER
@@ -758,13 +758,13 @@ state.rockchipes8316c {
 			range '0 - 28'
 			dbmin -650
 			dbmax 3550
-			dbvalue.0 3550
+			dbvalue.0 2200
 		}
 	}
 	control.30 {
 		iface MIXER
 		name 'ALC Capture Min Volume'
-		value 0
+		value 11
 		comment {
 			access 'read write'
 			type INTEGER
@@ -772,13 +772,13 @@ state.rockchipes8316c {
 			range '0 - 28'
 			dbmin -1200
 			dbmax 3000
-			dbvalue.0 -1200
+			dbvalue.0 450
 		}
 	}
 	control.31 {
 		iface MIXER
 		name 'ALC Capture Target Volume'
-		value 11
+		value 0
 		comment {
 			access 'read write'
 			type INTEGER
@@ -786,7 +786,7 @@ state.rockchipes8316c {
 			range '0 - 11'
 			dbmin -1650
 			dbmax -150
-			dbvalue.0 -150
+			dbvalue.0 -1650
 		}
 	}
 	control.32 {
@@ -803,7 +803,7 @@ state.rockchipes8316c {
 	control.33 {
 		iface MIXER
 		name 'ALC Capture Decay Time'
-		value 3
+		value 0
 		comment {
 			access 'read write'
 			type INTEGER
@@ -814,7 +814,7 @@ state.rockchipes8316c {
 	control.34 {
 		iface MIXER
 		name 'ALC Capture Attack Time'
-		value 2
+		value 6
 		comment {
 			access 'read write'
 			type INTEGER
@@ -835,7 +835,7 @@ state.rockchipes8316c {
 	control.36 {
 		iface MIXER
 		name 'ALC Capture Noise Gate Threshold'
-		value 0
+		value 31
 		comment {
 			access 'read write'
 			type INTEGER
