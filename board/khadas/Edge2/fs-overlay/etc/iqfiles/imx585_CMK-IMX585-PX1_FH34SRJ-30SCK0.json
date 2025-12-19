@@ -177,7 +177,7 @@
 								},
 								"AecFrameRateMode":	{
 									"isFpsFix":	1,
-									"FpsValue":	15
+									"FpsValue":	30
 								},
 								"AecAntiFlicker":	{
 									"enable":	1,
